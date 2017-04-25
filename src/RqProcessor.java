@@ -91,7 +91,7 @@ public class RqProcessor implements Runnable{
                     sendHeader(out,"HTTP/1.1 403 NO READ PERMISSIONS");
                 }
                 else {//检测所请求文件是否超出根目录
-                    if(theFile.toPath().toString().equals(rootDirectory.toPath()+INDEX_FILE)){
+                    if(theFile.toPath().toString().equals(rootDirectory.toPath()+"/"+INDEX_FILE)){
                         System.out.printf("OK");
                         sendHeader(out,"HTTP/1.1 200 OK",contentType,cache.length);
                         raw.write(cache);
@@ -101,7 +101,7 @@ public class RqProcessor implements Runnable{
                         if (theData == null){
                             sendHeader(out,"500 INTERNAL SERVER ERROR");
                         }else if (version.startsWith("HTTP/")){
-                            System.out.printf("OK");
+                            System.out.printf("OOK");
                             sendHeader(out,"HTTP/1.1 200 OK",contentType,theData.length);
                             raw.write(theData);
                             raw.flush();
