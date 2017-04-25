@@ -52,7 +52,7 @@ public class ServerPool {
     public static void main(String[] args) {
         File docroot;
         try {
-            docroot = new File("C:\\Users\\YorksonChang\\IdeaProjects\\Threadpool_Java_Server");
+            docroot = new File("/Users/Yorkson/IdeaProjects/Threadpool_Java_Server/");
         }catch (ArrayIndexOutOfBoundsException ex){
             return;
         }
