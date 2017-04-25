@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -18,10 +19,12 @@ public class ServerPool {
 
     private final File rootDirectory;
     private final int port;
+    private final byte[] cache;
     public ServerPool(File rootDirectory,int port) throws IOException {
         if (!rootDirectory.isDirectory()){
             throw new IOException(rootDirectory+" does not exit as a directory");
         }
+        this.cache =  Files.readAllBytes((new File(rootDirectory,INDEX_FILE)).toPath());
         this.rootDirectory = rootDirectory;
         this.port = port;
     }
@@ -35,7 +38,7 @@ public class ServerPool {
             while (true){
                 try {
                     Socket request = serverSocket.accept();
-                    Runnable r  = new RqProcessor(rootDirectory,INDEX_FILE,request);
+                    Runnable r  = new RqProcessor(rootDirectory,INDEX_FILE,request,cache);
                     pool.submit(r);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -49,7 +52,7 @@ public class ServerPool {
     public static void main(String[] args) {
         File docroot;
         try {
-            docroot = new File("/Users/Yorkson/IdeaProjects/Threadpool_Java_Server/");
+            docroot = new File("C:\\Users\\YorksonChang\\IdeaProjects\\Threadpool_Java_Server");
         }catch (ArrayIndexOutOfBoundsException ex){
             return;
         }

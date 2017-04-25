@@ -14,8 +14,10 @@ public class RqProcessor implements Runnable{
     private File rootDirectory;
     private String INDEX_FILE = "Lena.png";
     private Socket connection;
+    private byte[] cache;
 
-    public RqProcessor(File rootDirectory, String indexFile, Socket request) {
+
+    public RqProcessor(File rootDirectory, String indexFile, Socket request,byte[] cache) {
         if (rootDirectory.isFile()){
             throw new IllegalArgumentException("rootDirectory must be a directory, not a file");
         }
@@ -26,6 +28,7 @@ public class RqProcessor implements Runnable{
         }
         this.rootDirectory = rootDirectory;
         this.connection = request;
+        this.cache = cache;
         if (INDEX_FILE==null)
             this.INDEX_FILE = indexFile;
     }
@@ -54,7 +57,7 @@ public class RqProcessor implements Runnable{
             OutputStream raw = new BufferedOutputStream(connection.getOutputStream());
             Writer out = new OutputStreamWriter(raw);
             Reader in  = new InputStreamReader(new BufferedInputStream((connection.getInputStream())),"ASCII");
-            StringBuffer request = new StringBuffer(80);
+            StringBuilder request = new StringBuilder(80);
             while(true) {
                 int c = in.read();
                 if (c=='\r'||c=='\n'||c == -1) {
@@ -88,19 +91,24 @@ public class RqProcessor implements Runnable{
                     sendHeader(out,"HTTP/1.1 403 NO READ PERMISSIONS");
                 }
                 else {//检测所请求文件是否超出根目录
-                    byte[] theData = Files.readAllBytes(theFile.toPath());
-                    if (theData == null){
-                        sendHeader(out,"500 INTERNAL SERVER ERROR");
-                    }else if (version.startsWith("HTTP/")){
+                    if(theFile.toPath().toString().equals(rootDirectory.toPath()+INDEX_FILE)){
                         System.out.printf("OK");
-                        sendHeader(out,"HTTP/1.1 200 OK",contentType,theData.length);
+                        sendHeader(out,"HTTP/1.1 200 OK",contentType,cache.length);
+                        raw.write(cache);
+                        raw.flush();
+                    }else {
+                        byte[] theData = Files.readAllBytes(theFile.toPath());
+                        if (theData == null){
+                            sendHeader(out,"500 INTERNAL SERVER ERROR");
+                        }else if (version.startsWith("HTTP/")){
+                            System.out.printf("OK");
+                            sendHeader(out,"HTTP/1.1 200 OK",contentType,theData.length);
+                            raw.write(theData);
+                            raw.flush();
+                        }
                     }
-                    raw.write(theData);
-                    raw.flush();
                 }
             }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
